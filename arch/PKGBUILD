@@ -1,0 +1,58 @@
+# Maintainer: Daniel YC Lin <dlin.tw@gmail.com>
+
+pkgname=tarantool-c-git
+_pkgname=tarantool-c
+pkgver=1.0.r30
+pkgrel=1
+pkgdesc='Tarantool C connector'
+arch=(i686 x86_64)
+url='http://github.com/tarantool/tarantool-c'
+license=(BSD)
+depends=(tarantool)
+makedepends=(cmake tarantool doxygen python2-tarantool)
+conflicts=(tarantool-c)
+provides=(tarantool-c)
+replaces=(tarantool-c)
+#source=(https://github.com/tarantool/$_pkgname/archive/$pkgver.tar.gz)
+source=(git+https://github.com/tarantool/$_pkgname)
+
+pkgver() {
+  cd $_pkgname
+  git describe | sed 's/^v//; s/-/.r/; s/-.*//'
+}
+prepare() {
+  cd $_pkgname
+  git submodule init
+  git submodule update
+  sed -i 's/env python/env python2/' test/test-run.py
+}
+build() {
+  #cd $_pkgname-$pkgver
+  cd $_pkgname
+
+  cmake \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_BINDIR=/usr/bin \
+    -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DCMAKE_INSTALL_LIBDIR=/usr/lib \
+    .
+
+  make
+  make doc
+}
+
+check() {
+  #cd $_pkgname-$pkgver
+  cd $_pkgname
+  make test
+}
+
+package() {
+  #cd $_pkgname-$pkgver
+  cd $_pkgname
+  make install DESTDIR="$pkgdir"
+  #mkdir -p $pkgdir/usr/share/doc/$pkgname/
+  #cp -pR examples $pkgdir/usr/share/doc/$pkgname/
+  #cp -pR doc/html $pkgdir/usr/share/doc/$pkgname/
+}
+md5sums=('SKIP')
